@@ -4,45 +4,53 @@
 
 ## This function creates a special "matrix" object that can cache its inverse.
 ## It's a kind of a constructor for an object of a class (in the sense of an 
-## object oriented programming language). The object defines the data x and xinv
-## and the corresponding getter and setter methods. The returned list encapsules
-## the data and the methods using that data.
+## object oriented programming language). 
+## Data:
+## x - invertible square matrix
+## xinv - inverse of x
 
 makeCacheMatrix <- function(x = matrix()) {
-    ## x and xinv are defined in the scope of funtion makeCacheMatrix
-    ## Using <<- in the getter and setter functions will change these variables
+    ## x and xinv are defined in the scope of funtion makeCacheMatrix.
+    ## Using <<- in the functions will change these variables.
     xinv <- NULL
+    method <- solve
     
-    ## set sets the matirx x cached here. 
+    ## set sets the matirx x cached here and deletes the value of xinv. 
     ## Parameter mat must be an invertable square matrix.
     set <- function(mat) {
         xinv <<- NULL
         x <<- mat
     }
     
-    ## get just returns the cached matrix x
+    ## get just returns the currentvalue of x
     get <- function() x
     
-    ## You can set the inverse your own but no one prevents you
-    ## from setting any other value. Your value is stored in xinv.
-    ## To avoid trouble I would ommit this function. But in case you have a
-    ## more efficient methode to calculate the invese of a matrix you ca use
-    ## setinv.
+    ## You could use calulateAndCacheInv to set the inverse of x but if you like
+    ## you can calulate the inverse your own and set it withn setinv.
     setinv <- function(inv) xinv <<- inv
     
-    ## If getinv is called the first time and you haven't set xinv to your own
-    ## value via setinv, getinv will calculate the inverse of x using solve and  
-    ## store the result in xinv, otherwise (getinv was allready called before or 
-    ## you have set a value via setinv) getinv will just return xinv.
-    getinv <- function() {
-        if(is.null(xinv)) {
-            message("computing inverse in getinv ...")
-            xinv <<- solve(x)
+    ## get inv just returns the current value of xinv.
+    getinv <- function() xinv
+    
+    ## You can use calulateAndCacheInv to calculate/recalculate the inverse of x.
+    ## If you don't provide a function and xinv hasn't been calculated before,
+    ## solve is used the calculate the inverse.
+    ## If you provide a function the inverse of x is calculated no metter if
+    ## xinv was calulatet before
+    calulateAndCacheInv <- function(func=solve, ...) {
+        if(is.null(xinv) || !identical(func, method)) {
+            message("computing inverse in calulateAndCacheInv ...")
+            xinv <<- func(x, ...)
+            method <<- func
         }
         return(xinv)
     }
     
-    return(list(set=set, get=get, setinv=setinv, getinv=getinv))
+    return(list(set=set, 
+                get=get, 
+                setinv=setinv, 
+                getinv=getinv, 
+                calulateAndCacheInv=calulateAndCacheInv))
 }
 
 
@@ -52,15 +60,11 @@ makeCacheMatrix <- function(x = matrix()) {
 ## inverse from the cache.
 
 cacheSolve <- function(x, ...) {
-    ## If implemented follwing the given pattern, this function should look
-    ## like:
-    # inv <- x$getinv()
-    # if(is.null(inv)) {
-    #     message("computing inverse my own ...")
-    #     inv <- solve(x$get(), ...)
-    #     x$setinv(inv)
-    # } 
-    # return(inv)
-    ## This is all unneccessary because I implemented the logic in getinv
-    ## function of makeCachMatrix.
+    inv <- x$getinv()
+    if(is.null(inv)) {
+        message("computing inverse on my own ...")
+        inv <- solve(x$get(), ...)
+        x$setinv(inv)
+    } 
+    return(inv)
 }
