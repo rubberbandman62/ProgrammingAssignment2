@@ -13,7 +13,6 @@ makeCacheMatrix <- function(x = matrix()) {
     ## x and xinv are defined in the scope of funtion makeCacheMatrix.
     ## Using <<- in the functions will change these variables.
     xinv <- NULL
-    method <- solve
     
     ## set sets the matirx x cached here and deletes the value of xinv. 
     ## Parameter mat must be an invertable square matrix.
@@ -25,32 +24,17 @@ makeCacheMatrix <- function(x = matrix()) {
     ## get just returns the currentvalue of x
     get <- function() x
     
-    ## You could use calulateAndCacheInv to set the inverse of x but if you like
-    ## you can calulate the inverse your own and set it withn setinv.
+    ## You can calulate the inverse on your own and set it with setinv, but 
+    ## nothing prevents you from setting anny other value.
     setinv <- function(inv) xinv <<- inv
     
     ## get inv just returns the current value of xinv.
     getinv <- function() xinv
     
-    ## You can use calulateAndCacheInv to calculate/recalculate the inverse of x.
-    ## If you don't provide a function and xinv hasn't been calculated before,
-    ## solve is used the calculate the inverse.
-    ## If you provide a function the inverse of x is calculated no metter if
-    ## xinv was calulatet before
-    calulateAndCacheInv <- function(func=solve, ...) {
-        if(is.null(xinv) || !identical(func, method)) {
-            message("computing inverse in calulateAndCacheInv ...")
-            xinv <<- func(x, ...)
-            method <<- func
-        }
-        return(xinv)
-    }
-    
     return(list(set=set, 
                 get=get, 
                 setinv=setinv, 
-                getinv=getinv, 
-                calulateAndCacheInv=calulateAndCacheInv))
+                getinv=getinv))
 }
 
 
@@ -62,7 +46,7 @@ makeCacheMatrix <- function(x = matrix()) {
 cacheSolve <- function(x, ...) {
     inv <- x$getinv()
     if(is.null(inv)) {
-        message("computing inverse on my own ...")
+        message("computing inverse ...")
         inv <- solve(x$get(), ...)
         x$setinv(inv)
     } 
